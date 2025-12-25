@@ -7,4 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "GitHub is building Vita3K"
+      - name: Quick test
+        run: |
+          echo "OK"
+          uname -a
