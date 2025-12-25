@@ -1,0 +1,52 @@
+name: Vita3K ARM32 Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build deps
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            cmake ninja-build clang python3 \
+            libsdl2-dev
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "ndk;25.2.9519653"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+
+      - name: Configure Vita3K (ARM32)
+        run: |
+          mkdir build
+          cd build
+          cmake .. -GNinja \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=armeabi-v7a \
+            -DANDROID_PLATFORM=android-21 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DVITA3K_ENABLE_QT_GUI=OFF \
+            -DVITA3K_ENABLE_DISCORD_RPC=OFF \
+            -DVITA3K_ENABLE_NCE=OFF
+
+      - name: Build
+        run: |
+          cd build
+          ninja
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vita3k-arm32
+          path: build
